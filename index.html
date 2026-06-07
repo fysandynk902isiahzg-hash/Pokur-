@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Колесо Покура</title>
+  <style>
+    :root{
+      --bg:#07050a; --card:#121018; --card2:#191521; --gold:#ffd36a; --gold2:#a86b16;
+      --red:#d92b37; --green:#00a86b; --text:#fff7df; --muted:#b9a98a; --line:rgba(255,211,106,.20);
+      --shadow:0 18px 50px rgba(0,0,0,.45);
+      --safe: max(14px, env(safe-area-inset-left));
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;min-height:100%;background:radial-gradient(circle at 50% -10%,#40220a 0,#140b0d 34%,var(--bg) 76%);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow-x:hidden}
+    body{padding:14px var(--safe) 26px}
+    .app{width:min(100%,520px);margin:0 auto;display:flex;flex-direction:column;gap:14px}
+    .hero{position:relative;text-align:center;padding:18px 12px 10px;border:1px solid var(--line);border-radius:28px;background:linear-gradient(180deg,rgba(255,211,106,.10),rgba(255,255,255,.035));box-shadow:var(--shadow);overflow:hidden}
+    .hero:before{content:"";position:absolute;inset:-60px;background:radial-gradient(circle at 50% 0,rgba(255,211,106,.25),transparent 45%);pointer-events:none}
+    h1{position:relative;margin:0;font-size:clamp(31px,9vw,48px);line-height:.95;letter-spacing:.5px;font-weight:1000;text-transform:uppercase;background:linear-gradient(180deg,#fff7c8 0%,#ffd36a 42%,#b96c19 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 3px 0 rgba(65,30,0,.35),0 0 28px rgba(255,194,74,.22)}
+    .subtitle{position:relative;margin-top:8px;color:var(--muted);font-size:13px;font-weight:650}
+    .wheel-card{position:relative;border:1px solid var(--line);border-radius:32px;background:linear-gradient(180deg,rgba(25,21,33,.96),rgba(12,10,15,.96));box-shadow:var(--shadow);padding:14px 12px 18px;overflow:hidden}
+    .wheel-wrap{position:relative;width:min(100%,390px);aspect-ratio:1/1;margin:0 auto 12px;display:grid;place-items:center;touch-action:pan-y;pointer-events:none}
+    .wheel-frame{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#fff3a2 0 2%,#d99b35 12%,#513008 82%,#160d05 100%);box-shadow:0 0 0 6px rgba(255,215,118,.06),inset 0 0 22px rgba(0,0,0,.65),0 20px 60px rgba(0,0,0,.45)}
+    canvas{position:relative;width:calc(100% - 24px);height:calc(100% - 24px);border-radius:50%;display:block;filter:drop-shadow(0 12px 22px rgba(0,0,0,.38))}
+    .hub{position:absolute;width:22%;aspect-ratio:1/1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff6bd,#f0b43a 45%,#5c3207 100%);border:3px solid rgba(255,255,255,.25);box-shadow:0 0 0 8px rgba(0,0,0,.18),0 0 28px rgba(255,211,106,.45)}
+    .pointer{position:absolute;top:0;left:50%;transform:translateX(-50%);width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-top:34px solid #fff2b0;filter:drop-shadow(0 5px 5px rgba(0,0,0,.5));z-index:5}
+    .result{min-height:68px;border-radius:24px;border:1px solid rgba(255,211,106,.20);background:linear-gradient(180deg,rgba(255,211,106,.09),rgba(255,255,255,.035));display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;text-align:center}
+    .result small{color:var(--muted);font-weight:700}.winner{font-size:24px;font-weight:950;color:var(--gold);margin-top:2px}
+    .spin{width:100%;height:58px;border:0;border-radius:22px;background:linear-gradient(180deg,#ffe49b,#f5a91f 55%,#9a4e08);color:#2b1300;font-size:20px;font-weight:1000;text-transform:uppercase;box-shadow:0 8px 0 #5f2d04,0 20px 38px rgba(0,0,0,.42);cursor:pointer}
+    .spin:active{transform:translateY(4px);box-shadow:0 4px 0 #5f2d04,0 14px 28px rgba(0,0,0,.42)}
+    .spin:disabled{opacity:.58;filter:grayscale(.35);cursor:not-allowed;transform:none}
+    details{border:1px solid var(--line);border-radius:24px;background:rgba(18,16,24,.88);box-shadow:0 14px 32px rgba(0,0,0,.28);overflow:hidden}
+    summary{list-style:none;cursor:pointer;padding:15px 16px;font-size:16px;font-weight:900;display:flex;justify-content:space-between;align-items:center;color:#ffe5a0}
+    summary::-webkit-details-marker{display:none}.count{font-size:12px;color:var(--muted);font-weight:800}
+    .panel{padding:0 12px 14px;display:flex;flex-direction:column;gap:10px}.row{display:grid;grid-template-columns:1fr 44px;gap:8px;align-items:center}
+    input{width:100%;height:46px;border-radius:16px;border:1px solid rgba(255,211,106,.18);background:#09080d;color:#fff7df;padding:0 13px;font-size:16px;outline:none}input:focus{border-color:rgba(255,211,106,.55);box-shadow:0 0 0 3px rgba(255,211,106,.10)}
+    .iconbtn,.add,.danger{border:0;border-radius:16px;height:46px;font-weight:900;cursor:pointer}.iconbtn{background:rgba(217,43,55,.18);color:#ff8f99;font-size:20px}.add{background:linear-gradient(180deg,#2de09a,#0b935f);color:#03180f;font-size:16px}.danger{background:rgba(217,43,55,.16);border:1px solid rgba(217,43,55,.38);color:#ff9aa3;width:100%;margin-top:8px}
+    .rating{display:flex;flex-direction:column;gap:8px}.rank{display:grid;grid-template-columns:34px 1fr auto;gap:9px;align-items:center;padding:11px 12px;border-radius:16px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.06)}.rank b{color:var(--gold)}.rank span:last-child{font-weight:950;color:#fff2b0}.empty{text-align:center;color:var(--muted);padding:14px}.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);max-width:min(92vw,460px);background:#1a1114;border:1px solid rgba(255,211,106,.28);border-radius:18px;color:#ffe7b0;padding:12px 14px;box-shadow:var(--shadow);font-weight:750;display:none;z-index:20}.toast.show{display:block}.sync{font-size:12px;text-align:center;color:var(--muted);margin-top:-3px}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="hero">
+      <h1>Колесо<br>Покура</h1>
+      <div class="subtitle" id="syncText">общее колесо для всех игроков</div>
+    </section>
+
+    <section class="wheel-card">
+      <div class="wheel-wrap" aria-hidden="true">
+        <div class="wheel-frame"></div><div class="pointer"></div><canvas id="wheel" width="900" height="900"></canvas><div class="hub"></div>
+      </div>
+      <button class="spin" id="spinBtn">Крутить</button>
+      <div class="result"><small>Последний победитель</small><div class="winner" id="winnerText">—</div></div>
+    </section>
+
+    <details open>
+      <summary>Участники <span class="count" id="playerCount">0</span></summary>
+      <div class="panel"><div id="players"></div><button class="add" id="addBtn">➕ Добавить участника</button></div>
+    </details>
+
+    <details open>
+      <summary>Рейтинг <span class="count">общий</span></summary>
+      <div class="panel"><div class="rating" id="rating"></div><button class="danger" id="resetBtn">Сбросить рейтинг</button></div>
+    </details>
+  </main>
+  <div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  'use strict';
+  const API = '/api/state';
+  const $ = s => document.querySelector(s);
+  const canvas = $('#wheel'), ctx = canvas.getContext('2d');
+  const spinBtn = $('#spinBtn'), addBtn = $('#addBtn'), resetBtn = $('#resetBtn');
+  const playersEl = $('#players'), ratingEl = $('#rating'), winnerText = $('#winnerText'), playerCount = $('#playerCount'), syncText = $('#syncText'), toast = $('#toast');
+  const colors = ['#ba1730','#0c8f5c','#172e8f','#8a2aa6','#d28a13','#0f8e9f','#7a1d1d','#496d14','#6b47c4','#c24f1d'];
+  let state = { players: [], lastWinnerId: null, lastWinnerName: '' };
+  let rotation = 0, spinning = false, saveTimer = null, pollTimer = null;
+
+  function showToast(msg){ toast.textContent = msg; toast.classList.add('show'); clearTimeout(showToast.t); showToast.t = setTimeout(()=>toast.classList.remove('show'), 2600); }
+  function safePlayers(){ return (state.players || []).filter(p => p.name && p.name.trim()); }
+  function api(action, payload={}){
+    return fetch(API, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action, ...payload }) })
+      .then(r => r.json().then(j => r.ok ? j : Promise.reject(j)));
+  }
+  async function load(silent=false){
+    try{
+      const res = await fetch(API, { cache:'no-store' }).then(r => r.json());
+      if(res.ok){ state = res.state; render(); syncText.textContent = 'данные синхронизируются для всех'; }
+    }catch(e){ if(!silent) showToast('Сервер синхронизации пока недоступен'); syncText.textContent = 'нет соединения с сервером'; }
+  }
+  function scheduleReplace(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(async()=>{
+      try{ const res = await api('replacePlayers', { players: state.players }); state = res.state; render(); }
+      catch(e){ showToast(e.error || 'Не удалось сохранить'); }
+    }, 450);
+  }
+  function draw(){
+    const ps = safePlayers(); const n = Math.max(ps.length,1); const w = canvas.width, h = canvas.height, cx=w/2, cy=h/2, r=w*.47; ctx.clearRect(0,0,w,h); ctx.save(); ctx.translate(cx,cy); ctx.rotate(rotation);
+    for(let i=0;i<n;i++){
+      const a0 = -Math.PI/2 + i*2*Math.PI/n, a1 = -Math.PI/2 + (i+1)*2*Math.PI/n;
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,a0,a1); ctx.closePath(); ctx.fillStyle = colors[i%colors.length]; ctx.fill();
+      ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(255,235,170,.78)'; ctx.stroke();
+      ctx.save(); ctx.rotate((a0+a1)/2); ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.fillStyle='#fff8dc'; ctx.font = ps.length > 10 ? '700 34px system-ui' : '800 42px system-ui'; ctx.shadowColor='rgba(0,0,0,.65)'; ctx.shadowBlur=6;
+      const label = ps[i]?.name || '—'; ctx.fillText(label.length>14?label.slice(0,13)+'…':label, r-34, 0); ctx.restore();
+    }
+    ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.lineWidth=10; ctx.strokeStyle='rgba(255,218,110,.95)'; ctx.stroke(); ctx.restore();
+  }
+  function renderPlayers(){
+    playersEl.innerHTML='';
+    if(!state.players.length){ playersEl.innerHTML='<div class="empty">Добавь минимум двух участников</div>'; return; }
+    state.players.forEach(p=>{
+      const row=document.createElement('div'); row.className='row';
+      const input=document.createElement('input'); input.value=p.name; input.placeholder='Имя участника'; input.autocomplete='off';
+      input.addEventListener('input',()=>{ p.name=input.value.slice(0,40); renderLight(); scheduleReplace(); });
+      input.addEventListener('blur',()=>{ p.name=(p.name||'').trim() || 'Участник'; input.value=p.name; scheduleReplace(); });
+      const del=document.createElement('button'); del.className='iconbtn'; del.type='button'; del.textContent='×'; del.addEventListener('click', async()=>{ try{ const res=await api('removePlayer',{id:p.id}); state=res.state; render(); }catch(e){showToast(e.error||'Не удалось удалить');} });
+      row.append(input,del); playersEl.append(row);
+    });
+  }
+  function renderRating(){
+    const list=[...safePlayers()].sort((a,b)=>b.wins-a.wins || a.name.localeCompare(b.name,'ru'));
+    ratingEl.innerHTML = list.length ? '' : '<div class="empty">Пока нет участников</div>';
+    list.forEach((p,i)=>{ const d=document.createElement('div'); d.className='rank'; d.innerHTML=`<b>${i+1}</b><span>${escapeHtml(p.name)}</span><span>${p.wins||0}</span>`; ratingEl.append(d); });
+  }
+  function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  function renderLight(){ playerCount.textContent = safePlayers().length; winnerText.textContent = state.lastWinnerName || '—'; draw(); renderRating(); }
+  function render(){ renderPlayers(); renderLight(); }
+  function targetRotationForIndex(index, total){
+    const two=Math.PI*2; const slice=two/total; const targetBase = ((-(index+.5)*slice)%two + two)%two; const current=((rotation%two)+two)%two; const delta=(targetBase-current+two)%two; return rotation + two*6 + delta;
+  }
+  function animateTo(finalRot, cb){
+    const start=performance.now(), from=rotation, dur=4800;
+    function ease(t){ return 1 - Math.pow(1-t, 4); }
+    function frame(now){ const t=Math.min(1,(now-start)/dur); rotation=from+(finalRot-from)*ease(t); draw(); if(t<1) requestAnimationFrame(frame); else { rotation=finalRot; draw(); cb&&cb(); } }
+    requestAnimationFrame(frame);
+  }
+  spinBtn.addEventListener('click', async()=>{
+    if(spinning) return;
+    const ps=safePlayers(); if(ps.length<2){ showToast('Нужно минимум 2 участника'); return; }
+    spinning=true; spinBtn.disabled=true; spinBtn.textContent='Крутим…';
+    try{
+      const res=await api('spin');
+      state=res.state;
+      const idx = Math.max(0, Math.min(res.winnerIndex, safePlayers().length-1));
+      animateTo(targetRotationForIndex(idx, safePlayers().length), ()=>{ spinning=false; spinBtn.disabled=false; spinBtn.textContent='Крутить'; render(); showToast('Выпало: ' + (state.lastWinnerName || '—')); });
+    }catch(e){ spinning=false; spinBtn.disabled=false; spinBtn.textContent='Крутить'; showToast(e.error || 'Не удалось прокрутить'); }
+  });
+  addBtn.addEventListener('click', async()=>{ try{ const res=await api('addPlayer',{name:'Новый участник'}); state=res.state; render(); }catch(e){ showToast(e.error||'Не удалось добавить'); } });
+  resetBtn.addEventListener('click', async()=>{ if(!confirm('Сбросить общий рейтинг для всех?')) return; try{ const res=await api('resetRating'); state=res.state; render(); }catch(e){ showToast(e.error||'Не удалось сбросить'); } });
+  window.addEventListener('resize', draw);
+  load(); pollTimer=setInterval(()=>{ if(!spinning && document.visibilityState==='visible') load(true); }, 2500);
+})();
+</script>
+</body>
+</html>
